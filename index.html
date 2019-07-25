@@ -76,8 +76,7 @@ var svg = d3.select("body")
 // Get the data
 d3.csv("https://cvcatullus.github.io/cs498/weblog.csv", function(error, data) {
     data.forEach(function(d) {
-        //d.date = parseDate(d.Date);
-        d.date = d.Date
+        d.date = parseDate(d.Date);
         d.pageviews = +d.PageViews;
         d.visitors = +d.UniqueVisitors;
         d.bouncerate = +d.BounceRate;
