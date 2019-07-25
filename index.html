@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 
 <script src="https://d3js.org/d3.v3.min.js"></script>
@@ -5,16 +6,41 @@
 
 <header> CS498 </header>
 
-<body>
+<body onload="showScene()">
 
-    <h2>What Can JavaScript Do?</h2>
+    <script>
+        function showScene(){
+            document.getElementById("chart_area").style.display = "none";
+        }
+    </script>
 
-    <p id="demo">JavaScript can change HTML content.</p>
-    
-    <button onclick="document.getElementById('myImage').src='pic_bulbon.gif'">Scene #1</button>
+    <h2>Finding the cause of drastic change in page views</h2>
 
-    <button onclick="document.getElementById('myImage').src='pic_bulboff.gif'">Scene # 2</button>
+    <p id="demo">
+        The online shopping mall has a serious problem.
+        Look at the chart that depicts the page views and unique visitors in the shopping mall.</p>
 
+    <div id="button_area">
+        <button onclick="showScene1()">Scene #1</button>
+        <button onclick="showScene2()">Scene #2</button>
+        <button onclick="showScene3()">Scene #3</button>
+    </div>
+
+    <script>
+        //document.getElementById("html").onload = function() {showScene1()};
+        function showScene1(){
+            document.getElementById("chart_area").style.display = "block"
+            document.getElementById("valueline3").style.display = "none";
+        }
+        function showScene2(){
+            document.getElementById("chart_area").style.display = "block";
+            document.getElementById("valueline3").style.display = "block";
+        }
+        function showScene3(){
+            document.getElementById("chart_area").style.display = "none";
+        }
+    </script>
+    <div id="chart_area"></div>
 
 <style>
 
@@ -38,8 +64,8 @@
 
 <script>
 
-var margin = {top: 30, right: 40, bottom: 30, left: 50},
-    width = 600 - margin.left - margin.right,
+var margin = {top: 30, right: 40, bottom: 30, left: 70},
+    width = 800 - margin.left - margin.right,
     height = 270 - margin.top - margin.bottom;
 
 var parseDate = d3.time.format("%b %d").parse;
@@ -60,12 +86,16 @@ var yAxisRight = d3.svg.axis().scale(y1)
 var valueline = d3.svg.line()
     .x(function(d) { return x(d.date); })
     .y(function(d) { return y0(d.pageviews); });
-    
+
 var valueline2 = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y0(d.visitors); });
+
+var valueline3 = d3.svg.line()
     .x(function(d) { return x(d.date); })
     .y(function(d) { return y1(d.bouncerate); });
 
-var svg = d3.select("body")
+var svg = d3.select("#chart_area")
     .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -83,6 +113,7 @@ d3.csv("https://cvcatullus.github.io/cs498/weblog.csv", function(error, data) {
     });
 
     console.log(data)
+
     // Scale the range of the data
     x.domain(d3.extent(data, function(d) { return d.date; }));
     y0.domain([0, d3.max(data, function(d) {
@@ -92,10 +123,15 @@ d3.csv("https://cvcatullus.github.io/cs498/weblog.csv", function(error, data) {
 
     svg.append("path")        // Add the valueline path.
         .attr("d", valueline(data));
-
-    svg.append("path")        // Add the valueline2 path.
-        .style("stroke", "red")
+        
+    svg.append("path")        // Add the valueline path.
+        .style("stroke", "green")
         .attr("d", valueline2(data));
+
+    svg.append("path")        // Add the valueline3 path.
+        .attr("id", "valueline3")
+        .style("stroke", "red")
+        .attr("d", valueline3(data));
 
     svg.append("g")            // Add the X Axis
         .attr("class", "x axis")
