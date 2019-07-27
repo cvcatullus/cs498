@@ -1,46 +1,76 @@
 <!DOCTYPE html>
 <html>
 
-<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
 
 
 <header> CS498 </header>
 
+<style>
+div.tooltip {
+  position: absolute;
+  text-align: center;
+  width: 120px;
+  height: 30px;
+  padding: 2px;
+  font: 12px sans-serif;
+  background: lightsteelblue;
+  border: 0px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+</style>
+
 <body onload="showScene()">
 
-    <script>
-        function showScene(){
-            document.getElementById("chart_area").style.display = "none";
-        }
-    </script>
+<script>
+    function showScene(){
+        document.getElementById("chart_area").style.display = "none";
+        document.getElementById("chart_area2").style.display = "none";
+    }
+</script>
 
-    <h2>Finding the cause of drastic change in page views</h2>
+<h2>Finding the cause of drastic change in page views</h2>
 
-    <p id="demo">
-        The online shopping mall has a serious problem.
-        Look at the chart that depicts the page views and unique visitors in the shopping mall.</p>
+<p id="demo">
+    The online shopping mall has a serious problem.
+    Look at the chart that depicts the page views and unique visitors in the shopping mall.</p>
 
-    <div id="button_area">
-        <button onclick="showScene1()">Scene #1</button>
-        <button onclick="showScene2()">Scene #2</button>
-        <button onclick="showScene3()">Scene #3</button>
-    </div>
+<div id="button_area">
+    <button onclick="showScene1()">Scene #1</button>
+    <button onclick="showScene2()">Scene #2</button>
+    <button onclick="showScene3()">Scene #3</button>
+</div>
 
-    <script>
-        //document.getElementById("html").onload = function() {showScene1()};
-        function showScene1(){
-            document.getElementById("chart_area").style.display = "block"
-            document.getElementById("valueline3").style.display = "none";
+<script>
+    //document.getElementById("html").onload = function() {showScene1()};
+    function showScene1(){
+        document.getElementById("chart_area").style.display = "block";
+        document.getElementById("chart_area2").style.display = "none";
+        //document.getElementById("y_axis2").style.display = "none";
+        for (let element of document.getElementsByClassName("valueline3")){
+          element.style.display="none";
         }
-        function showScene2(){
-            document.getElementById("chart_area").style.display = "block";
-            document.getElementById("valueline3").style.display = "block";
+    }
+    function showScene2(){
+        document.getElementById("chart_area").style.display = "block";
+        document.getElementById("chart_area2").style.display = "none";
+        //document.getElementById("valueline3").style.display = "block";
+        //document.getElementById("y_axis2").style.display = "block";
+        for (let element of document.getElementsByClassName("valueline3")){
+          element.style.display="block";
         }
-        function showScene3(){
-            document.getElementById("chart_area").style.display = "none";
-        }
-    </script>
-    <div id="chart_area"></div>
+    }
+    function showScene3(){
+        document.getElementById("chart_area").style.display = "block";
+        document.getElementById("chart_area2").style.display = "block";
+        document.getElementById("y_axis2").style.display = "block";
+    }
+</script>
+<div id="chart_area"></div>
+ 
 
 <style>
 
@@ -64,34 +94,32 @@
 
 <script>
 
-var margin = {top: 30, right: 40, bottom: 30, left: 70},
+var margin = {top: 30, right: 70, bottom: 30, left: 70},
     width = 800 - margin.left - margin.right,
-    height = 270 - margin.top - margin.bottom;
+    height = 400 - margin.top - margin.bottom;
 
-var parseDate = d3.time.format("%b %d").parse;
+var parseDate = d3.timeParse("%b %d");
+var formatTime = d3.timeFormat("%b %d")
 
-var x = d3.time.scale().range([0, width]);
-var y0 = d3.scale.linear().range([height, 0]);
-var y1 = d3.scale.linear().range([height, 0]);
+var x = d3.scaleTime().range([0, width]);
+var y0 = d3.scaleLinear().range([height, 0]);
+var y1 = d3.scaleLinear().range([height, 0]);
 
-var xAxis = d3.svg.axis().scale(x)
-    .orient("bottom").ticks(5);
+var xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat("%b %d"));
 
-var yAxisLeft = d3.svg.axis().scale(y0)
-    .orient("left").ticks(5);
+var yAxisLeft = d3.axisLeft(y0).scale(y0).tickFormat(d3.format(".2s"));
 
-var yAxisRight = d3.svg.axis().scale(y1)
-    .orient("right").ticks(5); 
+var yAxisRight = d3.axisRight(y1).scale(y1).tickFormat(function(d){return d+"%"});
 
-var valueline = d3.svg.line()
+var valueline = d3.line()
     .x(function(d) { return x(d.date); })
     .y(function(d) { return y0(d.pageviews); });
 
-var valueline2 = d3.svg.line()
+var valueline2 = d3.line()
     .x(function(d) { return x(d.date); })
     .y(function(d) { return y0(d.visitors); });
 
-var valueline3 = d3.svg.line()
+var valueline3 = d3.line()
     .x(function(d) { return x(d.date); })
     .y(function(d) { return y1(d.bouncerate); });
 
@@ -104,7 +132,7 @@ var svg = d3.select("#chart_area")
             "translate(" + margin.left + "," + margin.top + ")");
 
 // Get the data
-d3.csv("https://cvcatullus.github.io/cs498/weblog.csv", function(error, data) {
+d3.csv("https://cvcatullus.github.io/cs498/weblog.csv", function(error, data){
     data.forEach(function(d) {
         d.date = parseDate(d.Date);
         d.pageviews = +d.PageViews;
@@ -112,45 +140,304 @@ d3.csv("https://cvcatullus.github.io/cs498/weblog.csv", function(error, data) {
         d.bouncerate = +d.BounceRate;
     });
 
-    console.log(data)
+console.log(data)
+var allGroup = ["Page Views", "Unique Visitors", "Bounce Rates"]
+var allColor = ["steelblue", "green", "red"]
 
-    // Scale the range of the data
-    x.domain(d3.extent(data, function(d) { return d.date; }));
-    y0.domain([0, d3.max(data, function(d) {
-        return Math.max(d.pageviews); })]); 
-    y1.domain([0, d3.max(data, function(d) { 
-        return Math.max(d.bouncerate); })]);
+// Scale the range of the data
+x.domain(d3.extent(data, function(d) { return d.date; }));
+y0.domain([0, d3.max(data, function(d) {
+    return Math.max(d.pageviews); })]); 
+y1.domain([0, d3.max(data, function(d) { 
+    return Math.max(d.bouncerate); })]);
 
-    svg.append("path")        // Add the valueline path.
-        .attr("d", valueline(data));
+svg.append("path")        // Add the valueline path.
+    .attr("d", valueline(data));
+
+var div = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+svg.selectAll("dots")
+  .data(data)
+  .enter()
+  .append('g')
+  .style("fill", "steelblue")
+  .attr("class", "pvs")
+  .append("circle")
+    .attr("cx", function(d) { return x(d.date); } )
+    .attr("cy", function(d) { return y0(d.pageviews); } )
+    .attr("r", 5)
+    .attr("stroke", "white")
+    .on("mouseover", function(d){
+        div.transition().duration('500').style("opacity",0.9)
+        div.html("Date: " + formatTime(d.date) + "<br/>PV: " + d.pageviews)
+            .style("left", (d3.event.pageX)+"px")
+            .style("top", (d3.event.pageY)+"px")
+            ;
+    })
+    .on("mouseout", function(){ div.transition().duration('500').style("opacity", 0)});
+
         
-    svg.append("path")        // Add the valueline path.
-        .style("stroke", "green")
-        .attr("d", valueline2(data));
+svg.append("path")        // Add the valueline2 path.
+    .style("stroke", "green")
+    .attr("d", valueline2(data));
 
-    svg.append("path")        // Add the valueline3 path.
-        .attr("id", "valueline3")
-        .style("stroke", "red")
-        .attr("d", valueline3(data));
+svg.selectAll("dots")
+  .data(data)
+  .enter()
+  .append('g')
+  .style("fill", "green")
+  .attr("class", "uvs")
+  .append("circle")
+    .attr("cx", function(d) { return x(d.date); } )
+    .attr("cy", function(d) { return y0(d.visitors); } )
+    .attr("r", 5)
+    .attr("stroke", "white")
+    .on("mouseover", function(d){
+        div.transition().duration('500').style("opacity",0.9)
+        div.html("Date: " + formatTime(d.date) + "<br/>UV: " + d.pageviews)
+            .style("left", (d3.event.pageX)+"px")
+            .style("top", (d3.event.pageY)+"px")
+            ;
+    })
+    .on("mouseout", function(){ div.transition().duration('500').style("opacity", 0)});
 
-    svg.append("g")            // Add the X Axis
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis);
+svg.append("path")        // Add the valueline3 path.
+    .attr("class", "valueline3")
+    .style("stroke", "red")
+    .attr("d", valueline3(data));
 
-    svg.append("g")
-        .attr("class", "y axis")
-        .style("fill", "steelblue")
-        .call(yAxisLeft);	
+svg.selectAll("dots")
+  .data(data)
+  .enter()
+  .append('g')
+  .style("fill", "red")
+  .attr("class", "valueline3")
+  .append("circle")
+    .attr("cx", function(d) { return x(d.date); } )
+    .attr("cy", function(d) { return y1(d.bouncerate); } )
+    .attr("r", 5)
+    .attr("stroke", "white")
+    .on("mouseover", function(d){
+        div.transition().duration('500').style("opacity",0.9)
+        div.html("Date: " + formatTime(d.date) + "<br/>Bounce %: " + d.pageviews)
+            .style("left", (d3.event.pageX)+"px")
+            .style("top", (d3.event.pageY)+"px")
+            ;
+    })
+    .on("mouseout", function(){ div.transition().duration('500').style("opacity", 0)});
 
-    svg.append("g")				
-        .attr("class", "y axis")	
-        .attr("transform", "translate(" + width + " ,0)")	
-        .style("fill", "red")		
-        .call(yAxisRight);
+svg.append("g")            // Add the X Axis
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis)
+    .append("text")
+        .attr("x", width / 2)
+        .attr("y", margin.bottom)
+        .attr("dx", "0.32em")
+        .attr("fill", "#000")
+        .attr("font-weight", "bold")
+        .attr("text-anchor", "start")
+        .text("Date");
 
-});
+svg.append("g")
+    .attr("class", "y axis")
+    .style("fill", "steelblue")
+    .call(yAxisLeft);	
+
+svg.append("g")				
+    //.attr("class", "y axis")
+    .attr("class", "valueline3")
+    .attr("id", "y_axis2")	
+    .attr("transform", "translate(" + width + " ,0)")	
+    .style("fill", "red")		
+    .call(yAxisRight);
+
+// Add legends
+svg.selectAll("legend")
+  .data(data)
+  .enter()
+    .append('g')
+    .append("text")
+      .attr('x', function(d,i){ return 40 + i*80})
+      .attr('y', 25)
+      .text(function(d,i) { return allGroup[i]; })
+      .style("fill", function(d,i){ return allColor[i] })
+      .style("font-size", 10)
+
+// Make annotation
+var labels = [
+  {
+    x: new Date('Jun 01 1900'),
+    y: 2453604,
+    text: 'Regular Maintenance on Jun 01',
+    orient: 'right'
+  }
+]
+
+console.log(labels)
+svg.append("g").selectAll("text.label")
+    .data(labels)
+    .enter()
+    .append('text')
+    .attr('x', function(d) {return x(d.x)+30})
+    .attr('y', function(d) {return y0(d.y)-30})
+    .style('text-anchor', function(d){return d.orient=='right' ? 'start' : 'end'})
+    .text(function(d) {return d.text});
+  
+svg.append("g")
+    .selectAll('line')
+    .data(labels)
+    .enter()
+    .append('line')
+      .attr('x1', function(d) {return x(d.x)})
+      .attr('y1', function(d) {return y0(d.y)})
+      .attr('x2', function(d) {return x(d.x)+30})
+      .attr('y2', function(d) {return y0(d.y)-30})
+      .attr("stroke-width", 1)
+      .attr("stroke", "darkgray");
+  }
+
+)
+</script>
+
+
+<div id="chart_area2"></div>
+
+<script>
+
+var trans_x = 30, trans_y = 350;
+
+// append the svg object to the body of the page
+var svg2 = d3.select("#chart_area2")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+          //"translate(" + trans_x + "," + trans_y + ")");
+          //"translate(30,40)");
+
+    console.log(trans_x+trans_y)
+//Read the data
+d3.csv("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_connectedscatter.csv", function(data) {
+
+    // List of groups (here I have one group per column)
+    var allGroup = ["valueA", "valueB", "valueC"]
+
+    // Reformat the data: we need an array of arrays of {x, y} tuples
+    var dataReady = allGroup.map( function(grpName) { // .map allows to do something for each element of the list
+      return {
+        name: grpName,
+        values: data.map(function(d) {
+          return {time: d.time, value: +d[grpName]};
+        })
+      };
+    });
+    // I strongly advise to have a look to dataReady with
+    console.log(dataReady)
+
+    // A color scale: one color for each group
+    var myColor = d3.scaleOrdinal()
+      .domain(allGroup)
+      .range(d3.schemeSet2);
+
+    // Add X axis --> it is a date format
+    var x = d3.scaleLinear()
+      .domain([0,10])
+      .range([ 0, width ]);
+    svg2.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));
+
+    // Add Y axis
+    var y = d3.scaleLinear()
+      .domain( [0,20])
+      .range([ height, 0 ]);
+    svg2.append("g")
+      .call(d3.axisLeft(y));
+
+    // Add the lines
+    var line = d3.line()
+      .x(function(d) { return x(+d.time) })
+      .y(function(d) { return y(+d.value) })
+    svg2.selectAll("lines")
+      .data(dataReady)
+      .enter()
+      .append("path")
+        .attr("class", function(d){ return d.name })
+        .attr("d", function(d){ return line(d.values) } )
+        .attr("stroke", function(d){ return myColor(d.name) })
+        .style("stroke-width", 4)
+        .style("fill", "none")
+
+    // Add the points
+    svg2
+      // First we need to enter in a group
+      .selectAll("dots")
+      .data(dataReady)
+      .enter()
+        .append('g')
+        .style("fill", function(d){ return myColor(d.name) })
+        .attr("class", function(d){ return d.name })
+      // Second we need to enter in the 'values' part of this group
+      .selectAll("points")
+      .data(function(d){ return d.values })
+      .enter()
+      .append("circle")
+        .attr("cx", function(d) { return x(d.time) } )
+        .attr("cy", function(d) { return y(d.value) } )
+        .attr("r", 5)
+        .attr("stroke", "white")
+        .on("mouseover", function(d){
+            tooltip.style("opacity",1)
+                    .style("left", (d3.event.pageX)+ "px")
+                    .style("top", (d3.event.pageY)+ "px")
+                    .html("Date: "+ d.time + " value" + d.value);
+          })
+    // Add a label at the end of each line
+    svg2
+      .selectAll("labels")
+      .data(dataReady)
+      .enter()
+        .append('g')
+        .append("text")
+          .attr("class", function(d){ return d.name })
+          .datum(function(d) { return {name: d.name, value: d.values[d.values.length - 1]}; }) // keep only the last value of each time series
+          .attr("transform", function(d) { return "translate(" + x(d.value.time) + "," + y(d.value.value) + ")"; }) // Put the text at the position of the last point
+          .attr("x", 12) // shift the text a bit more right
+          .text(function(d) { return d.name; })
+          .style("fill", function(d){ return myColor(d.name) })
+          .style("font-size", 15)
+
+    // Add a legend (interactive)
+    svg2
+      .selectAll("legend")
+      .data(dataReady)
+      .enter()
+        .append('g')
+        .append("text")
+          .attr('x', function(d,i){ return 30 + i*60})
+          .attr('y', 30)
+          .text(function(d) { return d.name; })
+          .style("fill", function(d){ return myColor(d.name) })
+          .style("font-size", 15)
+        .on("click", function(d){
+          // is the element currently visible ?
+          currentOpacity = d3.selectAll("." + d.name).style("opacity")
+          // Change the opacity: from 0 to 1 or from 1 to 0
+          d3.selectAll("." + d.name).transition().style("opacity", currentOpacity == 1 ? 0:1)
+
+        })
+          
+
+})
 
 </script>
+
+
+
 </body>
 </html>
